@@ -10,6 +10,7 @@
         body { font-family: Arial, sans-serif; text-align: center; }
         #webcam-container { margin-top: 20px; }
         #label-container { margin-top: 10px; }
+        .prediction { margin: 10px; font-size: 20px; }
     </style>
 </head>
 <body>
@@ -17,9 +18,10 @@
     <button type="button" onclick="init()">Start</button>
     <div id="webcam-container"></div>
     <div id="label-container"></div>
+    <div id="prediction-output"></div>
     
     <script>
-        const URL = "./my_model/";
+        const URL = "./my_model/"; 
         let model, webcam, labelContainer, maxPredictions;
 
         async function init() {
@@ -49,9 +51,24 @@
 
         async function predict() {
             const prediction = await model.predict(webcam.canvas);
+            let highestPrediction = null;
+
             for (let i = 0; i < maxPredictions; i++) {
-                const classPrediction = prediction[i].className + ": " + prediction[i].probability.toFixed(2);
+                const classPrediction = prediction[i].className + ": " + (prediction[i].probability * 100).toFixed(2) + "%";
                 labelContainer.childNodes[i].innerHTML = classPrediction;
+                
+                if (!highestPrediction || prediction[i].probability > highestPrediction.probability) {
+                    highestPrediction = {
+                        className: prediction[i].className,
+                        probability: prediction[i].probability
+                    };
+                }
+            }
+            
+            // Mostrar el resultado con la mayor probabilidad (precisión)
+            const predictionOutput = document.getElementById("prediction-output");
+            if (highestPrediction) {
+                predictionOutput.innerHTML = `La seña más probable es: <strong>${highestPrediction.className}</strong> con una precisión de <strong>${(highestPrediction.probability * 100).toFixed(2)}%</strong>`;
             }
         }
     </script>
